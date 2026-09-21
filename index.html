@@ -3,139 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>kimetelu - モーニングラテ・リーダー</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>kimetelu - ダダラ見を防ぐ情報空間</title>
+    <style>
+        :root {
+            --bg-color: #fbf9f6;
+            --card-bg: #ffffff;
+            --text-main: #2c221e;
+            --text-sub: #7a6e65;
+            --accent-coral: #ff7f6b;
+            --accent-gold: #e6b800; /* ③サンセットゴールド */
+            --border-color: #f0eae1;
+            --tag-bg: #f3efe6;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .theme-badge {
+            background-color: var(--tag-bg);
+            color: var(--text-sub);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            background-color: var(--bg-color);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-coral);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: var(--text-sub);
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .article-item {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: transform 0.1s ease;
+        }
+
+        .article-item:hover {
+            border-color: var(--accent-coral);
+        }
+
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
+
+        .article-title {
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .article-desc {
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        /* サンセットゴールドのNEWバッジ */
+        .new-badge {
+            background-color: var(--accent-gold);
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span>☕</span> kimetelu
+            </div>
+            <div class="theme-badge">モーニングラテ</div>
+        </header>
+
+        <!-- お気に入り追加エリア -->
+        <div class="card">
+            <div style="font-weight: bold; margin-bottom: 12px; font-size: 14px; color: var(--text-sub);">+ お気に入りを追加する</div>
+            <input type="text" id="siteName" placeholder="サイト名（例：〇〇さんのブログ）">
+            <input type="url" id="siteUrl" placeholder="URL（例：https://example.com）">
+            <button class="btn-primary" onclick="addSite()">リストに登録する</button>
+        </div>
+
+        <!-- タイムラインエリア -->
+        <div>
+            <div class="timeline-header">
+                <span>タイムライン</span>
+                <button class="refresh-btn" onclick="checkUpdates()">更新を確認する</button>
+            </div>
+            <div id="timelineList">
+                <!-- タイムラインの記事がここに表示されます -->
+            </div>
+        </div>
+    </div>
+
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        latteBg: '#FDFBF7',
-                        latteCard: '#FFFFFF',
-                        latteMain: '#B58863',
-                        latteAccent: '#FF6F59',
-                        latteText: '#4A3B32',
-                    }
-                }
+        // サンプルの初期記事データ
+        let articles = [
+            {
+                id: "art-1",
+                site: "kimetelu 公式案内",
+                title: "ダダラ見を防ぐ！自分だけの情報空間を作ろう",
+                desc: "お気に入りのソースだけに登録して、情報の沼から抜け出しましょう！",
+                time: "今日 08:00",
+                url: "#"
+            }
+        ];
+
+        // ページを読み込んだときと、更新ボタンを押したときに一覧を表示する
+        function renderTimeline() {
+            const listContainer = document.getElementById("timelineList");
+            listContainer.innerHTML = "";
+
+            // すでにクリックして既読にした記事のIDをブラウザの記憶から取得する
+            const readArticles = JSON.parse(localStorage.getItem("readArticles") || "[]");
+
+            articles.forEach(article => {
+                // まだ読んでいない（既読リストに含まれていない）場合だけ isNew を true にする
+                const isNew = !readArticles.includes(article.id);
+
+                const item = document.createElement("a");
+                item.href = article.url;
+                item.className = "article-item";
+                // 記事をクリックしたときに「読んだよ」と記憶してNEWを消す関数を呼ぶ
+                item.onclick = function() {
+                    markAsRead(article.id);
+                };
+
+                item.innerHTML = `
+                    <div class="article-meta">
+                        <span>${article.site}</span>
+                        <span>${article.time}</span>
+                    </div>
+                    <div class="article-title">
+                        ${article.title}
+                        ${isNew ? '<span class="new-badge">NEW</span>' : ''}
+                    </div>
+                    <div class="article-desc">${article.desc}</div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        // 記事をクリックしたときに既読にする関数
+        function markAsRead(id) {
+            let readArticles = JSON.parse(localStorage.getItem("readArticles") || "[]");
+            if (!readArticles.includes(id)) {
+                readArticles.push(id);
+                localStorage.setItem("readArticles", JSON.stringify(readArticles));
             }
         }
-    </script>
-</head>
-<body class="bg-latteBg text-latteText min-h-screen font-sans pb-12">
 
-    <!-- ヘッダー -->
-    <header class="bg-latteCard border-b border-[#EFECE6] sticky top-0 z-10 shadow-sm">
-        <div class="max-w-xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold flex items-center gap-2">
-                ☕ kimetelu
-            </h1>
-            <span class="text-xs bg-[#F3ECE4] text-latteMain px-2.5 py-1 rounded-full font-medium">モーニングラテ</span>
-        </div>
-    </header>
+        // 「更新を確認する」ボタンを押したときの処理
+        function checkUpdates() {
+            // ここで本当は最新情報を取得しにいく動きをシミュレーション
+            renderTimeline();
+            alert("最新の更新を確認しました！");
+        }
 
-    <main class="max-w-xl mx-auto px-4 mt-6 space-y-6">
-
-        <!-- 登録セクション -->
-        <section class="bg-latteCard p-5 rounded-2xl shadow-sm border border-[#EFECE6]">
-            <h2 class="text-sm font-bold text-latteMain mb-3">＋ お気に入りを追加する</h2>
-            <div class="space-y-3">
-                <input type="text" id="siteTitle" placeholder="サイト名（例：〇〇さんのブログ）" class="w-full px-4 py-2 text-sm bg-latteBg border border-[#EFECE6] rounded-xl focus:outline-none focus:border-latteMain">
-                <input type="url" id="siteUrl" placeholder="URL（例：https://example.com）" class="w-full px-4 py-2 text-sm bg-latteBg border border-[#EFECE6] rounded-xl focus:outline-none focus:border-latteMain">
-                <button onclick="addSource()" class="w-full bg-latteAccent text-white font-bold py-2.5 rounded-xl text-sm shadow-sm hover:opacity-90 transition">
-                    リストに登録する
-                </button>
-            </div>
-        </section>
-
-        <!-- タイムラインセクション -->
-        <section>
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="font-bold text-base">タイムライン</h2>
-                <button onclick="loadTimeline()" class="text-xs text-latteMain underline hover:opacity-80">更新を確認する</button>
-            </div>
-
-            <div id="timelineList" class="space-y-4">
-                <!-- サンプル記事 -->
-                <article class="bg-latteCard p-4 rounded-2xl shadow-sm border border-[#EFECE6]">
-                    <div class="flex items-center justify-between text-xs text-gray-400 mb-1">
-                        <span class="font-medium text-latteMain">kimetelu 公式案内</span>
-                        <span>今日 08:00</span>
-                    </div>
-                    <h3 class="font-bold text-base mb-1">
-                        <a href="#" class="hover:text-latteAccent">ダラダラ見を防ぐ！自分だけの情報空間を作ろう</a>
-                    </h3>
-                    <p class="text-xs text-gray-500">
-                        お気に入りのソースだけをここに登録して、情報の沼から抜け出しましょう！
-                    </p>
-                </article>
-            </div>
-        </section>
-
-    </main>
-
-    <script>
-        let sources = JSON.parse(localStorage.getItem('kimetelu_sources')) || [];
-
-        function addSource() {
-            const title = document.getElementById('siteTitle').value;
-            const url = document.getElementById('siteUrl').value;
-
-            if (!title || !url) {
-                alert('サイト名とURLを入力してね！');
+        // サイト登録機能（簡易版）
+        function addSite() {
+            const name = document.getElementById("siteName").value;
+            const url = document.getElementById("siteUrl").value;
+            if(!name || !url) {
+                alert("サイト名とURLを入力してくださいね！");
                 return;
             }
 
-            sources.push({ title, url });
-            localStorage.setItem('kimetelu_sources', JSON.stringify(sources));
+            // 新しい記事データを追加（新しいものなので自動でNEWがつくよ！）
+            const newArticle = {
+                id: "art-" + Date.now(),
+                site: name,
+                title: name + " の新着記事",
+                desc: "登録された新しい情報ソースです。",
+                time: "たった今",
+                url: url
+            };
 
-            document.getElementById('siteTitle').value = '';
-            document.getElementById('siteUrl').value = '';
-            
-            alert('お気に入りに登録したよ！');
-            loadTimeline();
+            articles.unshift(newArticle); // リストの先頭に追加
+            renderTimeline();
+
+            // 入力欄を空にする
+            document.getElementById("siteName").value = "";
+            document.getElementById("siteUrl").value = "";
+            alert("お気に入りに追加しました！");
         }
 
-        function loadTimeline() {
-            const timelineList = document.getElementById('timelineList');
-            let html = `
-                <article class="bg-latteCard p-4 rounded-2xl shadow-sm border border-[#EFECE6]">
-                    <div class="flex items-center justify-between text-xs text-gray-400 mb-1">
-                        <span class="font-medium text-latteMain">kimetelu 公式案内</span>
-                        <span>今日 08:00</span>
-                    </div>
-                    <h3 class="font-bold text-base mb-1">
-                        <a href="#" class="hover:text-latteAccent">ダラダラ見を防ぐ！自分だけの情報空間を作ろう</a>
-                    </h3>
-                    <p class="text-xs text-gray-500">
-                        お気に入りのソースだけをここに登録して、情報の沼から抜け出しましょう！
-                    </p>
-                </article>
-            `;
-
-            if (sources.length > 0) {
-                sources.forEach(src => {
-                    html += `
-                        <article class="bg-latteCard p-4 rounded-2xl shadow-sm border border-[#EFECE6]">
-                            <div class="flex items-center justify-between text-xs text-gray-400 mb-1">
-                                <span class="font-medium text-latteMain">${src.title}</span>
-                                <span class="text-latteAccent font-bold">New</span>
-                            </div>
-                            <h3 class="font-bold text-base mb-1">
-                                <a href="${src.url}" target="_blank" class="hover:text-latteAccent">${src.title} のページを開く</a>
-                            </h3>
-                            <p class="text-xs text-gray-500">
-                                登録URL: ${src.url}
-                            </p>
-                        </article>
-                    `;
-                });
-            }
-
-            timelineList.innerHTML = html;
-        }
-
-        loadTimeline();
+        // 最初の一回目を表示
+        renderTimeline();
     </script>
 </body>
 </html>
